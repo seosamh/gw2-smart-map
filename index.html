@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title> - jsFiddle demo</title>
+  
+  <script type='text/javascript' src='//code.jquery.com/jquery-1.9.1.js'></script>
+  
+  
+  
+  <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+  
+    
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.5.1/leaflet.css">
+    
+    
+  
+    
+    
+      <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.5.1/leaflet.js"></script>
+    
+  
+  <style type='text/css'>
+    .leaflet-container {
+    background: #000;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+  </style>
+  
+
+
+<script type='text/javascript'>//<![CDATA[ 
+$(window).load(function(){
+var map;
+
+function unproject(coord) {
+    return map.unproject(coord, map.getMaxZoom());
+}
+
+function onMapClick(e) {
+    console.log("You clicked the map at " + map.project(e.latlng));
+}
+
+$(function () {
+    "use strict";
+    
+    var southWest, northEast;
+    
+    map = L.map("map", {
+        minZoom: 0,
+        maxZoom: 7,
+        crs: L.CRS.Simple
+    }).setView([0, 0], 0);
+    
+    southWest = unproject([0, 32768]);
+    northEast = unproject([32768, 0]);
+    
+    map.setMaxBounds(new L.LatLngBounds(southWest, northEast));
+
+    L.tileLayer("https://tiles.guildwars2.com/1/1/{z}/{x}/{y}.jpg", {
+        minZoom: 0,
+        maxZoom: 7,
+        continuousWorld: true
+    }).addTo(map);
+
+    map.on("click", onMapClick);
+
+    $.getJSON("https://api.guildwars2.com/v1/map_floor.json?continent_id=1&floor=1", function (data) {
+        var region, gameMap, i, il, poi;
+        
+        for (region in data.regions) {
+            region = data.regions[region];
+            
+            for (gameMap in region.maps) {
+                gameMap = region.maps[gameMap];
+                
+                for (i = 0, il = gameMap.points_of_interest.length; i < il; i++) {
+                    poi = gameMap.points_of_interest[i];
+                    
+                    if (poi.type != "waypoint") {
+                        continue;
+                    }
+
+                    L.marker(unproject(poi.coord), {
+                        title: poi.name
+                    }).addTo(map);
+                }
+            }
+        }
+    });
+});
+});//]]>  
+
+</script>
+
+
+</head>
+<body>
+  <div id="map"></div>
+  
+</body>
+
+
+</html>
